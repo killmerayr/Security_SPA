@@ -1,0 +1,84 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events';
+
+const EventForm = () => {
+  const { id } = useParams(); 
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    location: '',
+    riskLevel: 'low',
+    guardsCount: 0,
+    status: 'planned',
+    type: 'internal'
+  });
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (id) {
+      axios.get(`${API_URL}/${id}`)
+        .then(res => setFormData(res.data))
+        .catch(err => console.error("Ошибка загрузки:", err));
+    }
+  }, [id]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (Number(formData.guardsCount) <= 0) {
+      setError('Количество охраны должно быть больше 0');
+      return;
+    }
+    setError(null);
+    if (id) {
+      axios.put(`${API_URL}/${id}`, formData)
+        .then(() => {
+          alert("Данные обновлены!");
+          navigate('/');
+        })
+        .catch(err => setError(err.message));
+    } else {
+      axios.post(API_URL, formData)
+        .then(() => {
+          alert("Мероприятие создано!");
+          navigate('/');
+        })
+        .catch(err => setError(err.message));
+    }
+  };
+
+  return (
+    <div>
+      <h2>{id ? "Редактирование" : "Новое мероприятие"}</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px' }}>
+        <input placeholder="Название" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+        <input placeholder="Локация" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required />
+        
+        <label>Риск:</label>
+        <select value={formData.riskLevel} onChange={e => setFormData({...formData, riskLevel: e.target.value})}>
+          <option value="low">Низкий</option>
+          <option value="medium">Средний</option>
+          <option value="high">Высокий</option>
+        </select>
+
+        <label>Тип:</label>
+        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+          <option value="internal">internal</option>
+          <option value="external">external</option>
+        </select>
+
+        <label>Охрана (чел):</label>
+        <input type="number" value={formData.guardsCount} onChange={e => setFormData({...formData, guardsCount: e.target.value})} />
+        
+        <button type="submit" style={{ padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
+          {id ? "Сохранить изменения" : "Создать мероприятие"}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default EventForm;

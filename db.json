@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "id": "1",
+      "title": "Форум кибербезопасности",
+      "type": "internal",
+      "location": "Зал A-10",
+      "riskLevel": "high",
+      "guardsCount": 15,
+      "status": "planned"
+    },
+    {
+      "id": "2",
+      "title": "Городской марафон",
+      "type": "external",
+      "location": "Центральная площадь",
+      "riskLevel": "medium",
+      "guardsCount": 50,
+      "status": "active"
+    }
+  ]
+}
