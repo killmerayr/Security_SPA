@@ -8,12 +8,17 @@ const EventList = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [guards, setGuard] = useState([]);
 
   useEffect(() => {
     axios.get(API_URL)
       .then(res => setEvents(res.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
+
+    axios.get(`${API_URL}/guards`)
+      .then(res => setGuard(res.data))
+      .catch(err => console.error("Ошибка загрузки охранников", err));
   }, []);
 
   const handleDelete = (id) => {
@@ -26,6 +31,8 @@ const EventList = () => {
     }
   };
 
+  const guardById = Object.fromEntries(guards.map(g => [g.id, g]));
+
   return (
     <div>
       <h1>Реестр мероприятий</h1>
@@ -36,6 +43,7 @@ const EventList = () => {
           <div key={event.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
             <h3>{event.title}</h3>
             <p>Локация: {event.location}</p>
+            <p>Ответственный: {guardById[event.guardID]?.fullname || '-'}</p>
             <p>Риск: <strong>{event.riskLevel}</strong> | Охрана: {event.guardsCount} чел.</p>
             <p>Статус: {event.status}</p>
             

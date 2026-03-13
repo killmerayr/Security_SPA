@@ -7,7 +7,8 @@
       "location": "Зал A-10",
       "riskLevel": "high",
       "guardsCount": 15,
-      "status": "planned"
+      "status": "planned",
+      "guardId": "g1"
     },
     {
       "id": "2",
@@ -16,7 +17,22 @@
       "location": "Центральная площадь",
       "riskLevel": "medium",
       "guardsCount": 50,
-      "status": "active"
+      "status": "active",
+      "guardId": "g2"
+    }
+  ],
+  "guards": [
+    {
+      "id": "g1",
+      "fullName": "Иван Петров",
+      "rank": "старший смены",
+      "phone": "+7-900-111-22-33"
+    },
+    {
+      "id": "g2",
+      "fullName": "Алексей Смирнов",
+      "rank": "охранник",
+      "phone": "+7-900-444-55-66"
     }
   ]
 }

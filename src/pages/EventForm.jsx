@@ -7,13 +7,15 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events';
 const EventForm = () => {
   const { id } = useParams(); 
   const navigate = useNavigate();
+  const [guards, setGuards] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     location: '',
     riskLevel: 'low',
     guardsCount: 0,
     status: 'planned',
-    type: 'internal'
+    type: 'internal',
+    guardId: ''
   });
   const [error, setError] = useState(null);
 
@@ -24,6 +26,12 @@ const EventForm = () => {
         .catch(err => console.error("Ошибка загрузки:", err));
     }
   }, [id]);
+
+  useEffect(() => {
+    axios,get(`${API_URL}/guards`)
+    .then(res => setGuards(res.data))
+    .catch(err => console.error("Ошибка загрузки охранников", err));
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,6 +78,14 @@ const EventForm = () => {
           <option value="external">external</option>
         </select>
 
+        <label>Ответственный охранник</label>
+        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} required>
+          <option value="">выбрать</option>
+          {guards.map(g => (
+            <option key={g.id} value={g.id}> {g.fullName} ({g.rank})
+            </option>
+          ))}
+        </select>
         <label>Охрана (чел):</label>
         <input type="number" value={formData.guardsCount} onChange={e => setFormData({...formData, guardsCount: e.target.value})} />
         
