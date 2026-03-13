@@ -28,7 +28,7 @@ const EventForm = () => {
   }, [id]);
 
   useEffect(() => {
-    axios,get(`${API_URL}/guards`)
+    axios.get(`${API_URL}/guards`)
     .then(res => setGuards(res.data))
     .catch(err => console.error("Ошибка загрузки охранников", err));
   }, []);
