@@ -3,20 +3,22 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/guards';
+const EventURL = `${API_URL}/events`;
+const GuardsUrl = `${API_URL}/guards`;
 
 export default function GuardList() {
   const [guards, setGuards] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(API_URL)
+    axios.get(GuardsUrl)
       .then(res => setGuards(res.data))
       .finally(() => setLoading(false));
   }, []);
 
   const handleDelete = (id) => {
     if (!window.confirm("Удалить охранника?")) return;
-    axios.delete(`${API_URL}/${id}`)
+    axios.delete(`${GuardsUrl}/${id}`)
       .then(() => setGuards(prev => prev.filter(g => g.id !== id)));
   };
 

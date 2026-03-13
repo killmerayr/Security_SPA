@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/guards';
+const EventURL = `${API_URL}/events`;
+const GuardsUrl = `${API_URL}/guards`;
 
 export default function GuardForm() {
   const { id } = useParams();
@@ -16,17 +18,17 @@ export default function GuardForm() {
 
   useEffect(() => {
     if (!id) return;
-    axios.get(`${API_URL}/${id}`)
+    axios.get(`${GuardsUrl}/${id}`)
       .then(res => setFormData(res.data));
   }, [id]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const req = id
-      ? axios.put(`${API_URL}/${id}`, formData)
-      : axios.post(API_URL, formData);
+      ? axios.put(`${GuardsUrl}/${id}`, formData)
+      : axios.post(GuardsUrl, formData);
 
-    req.then(() => navigate('/guards'));
+    req.then(() => navigate(GuardsUrl));
   };
 
   return (

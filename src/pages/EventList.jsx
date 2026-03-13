@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events'; 
+const EventURL = `${API_URL}/events`;
+const GuardsUrl = `${API_URL}/guards`;
 
 const EventList = () => {
   const [events, setEvents] = useState([]);
@@ -11,19 +13,19 @@ const EventList = () => {
   const [guards, setGuard] = useState([]);
 
   useEffect(() => {
-    axios.get(API_URL)
+    axios.get(EventURL)
       .then(res => setEvents(res.data))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
 
-    axios.get(`${API_URL}/guards`)
+    axios.get(GuardsUrl)
       .then(res => setGuard(res.data))
       .catch(err => console.error("Ошибка загрузки охранников", err));
   }, []);
 
   const handleDelete = (id) => {
     if (window.confirm("Удалить запись?")) {
-      axios.delete(`${API_URL}/${id}`)
+      axios.delete(`${EventURL}/${id}`)
         .then(() => {
           setEvents(events.filter(event => event.id !== id));
         })

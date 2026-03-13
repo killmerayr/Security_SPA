@@ -4,18 +4,21 @@ import axios from 'axios';
 
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events';
+const EventURL = `${API_URL}/events`;
+const GuardsUrl = `${API_URL}/guards`;
+
 const EventDetail = () => {
   const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [guard, setGuard] = useState(null);
 
 useEffect(() => {
-  axios.get(`${API_URL}/${id}`)
+  axios.get(`${GuardsUrl}/${id}`)
     .then(res => {
       setEvent(res.data);
 
       if (res.data.guardId) {
-        axios.get(`http://localhost:3001/guards/${res.data.guardId}`)
+        axios.get(`${GuardsUrl}/${res.data.guardId}`)
           .then(gRes => setGuard(gRes.data))
           .catch(err => console.error("Ошибка загрузки охранника:", err));
       }

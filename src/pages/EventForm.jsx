@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events';
+const EventURL = `${API_URL}/events`;
+const GuardsUrl = `${API_URL}/guards`;
 
 const EventForm = () => {
   const { id } = useParams(); 
@@ -21,14 +23,14 @@ const EventForm = () => {
 
   useEffect(() => {
     if (id) {
-      axios.get(`${API_URL}/${id}`)
+      axios.get(`${EventURL}/${id}`)
         .then(res => setFormData(res.data))
         .catch(err => console.error("Ошибка загрузки:", err));
     }
   }, [id]);
 
   useEffect(() => {
-    axios.get(`${API_URL}/guards`)
+    axios.get(`${GuardsUrl}`)
     .then(res => setGuards(res.data))
     .catch(err => console.error("Ошибка загрузки охранников", err));
   }, []);
@@ -41,14 +43,14 @@ const EventForm = () => {
     }
     setError(null);
     if (id) {
-      axios.put(`${API_URL}/${id}`, formData)
+      axios.put(`${EventURL}/${id}`, formData)
         .then(() => {
           alert("Данные обновлены!");
           navigate('/');
         })
         .catch(err => setError(err.message));
     } else {
-      axios.post(API_URL, formData)
+      axios.post(EventURL, formData)
         .then(() => {
           alert("Мероприятие создано!");
           navigate('/');
