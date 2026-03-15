@@ -13,7 +13,7 @@ const EventDetail = () => {
   const [guard, setGuard] = useState(null);
 
 useEffect(() => {
-  axios.get(`${GuardsUrl}/${id}`)
+  axios.get(`${EventURL}/${id}`)
     .then(res => {
       setEvent(res.data);
 
