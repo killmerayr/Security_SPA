@@ -81,7 +81,7 @@ const EventForm = () => {
         </select>
 
         <label>Ответственный охранник</label>
-        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} required>
+        <select value={formData.guardId} onChange={e => setFormData({...formData, guardId: e.target.value})} required>
           <option value="">выбрать</option>
           {guards.map(g => (
             <option key={g.id} value={g.id}> {g.fullName} ({g.rank})

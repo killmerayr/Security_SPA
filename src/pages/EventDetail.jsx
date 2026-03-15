@@ -33,7 +33,7 @@ useEffect(() => {
       <h1>{event.title}</h1>
       <p><strong>Место:</strong> {event.location}</p>
       <p><strong>Уровень опасности:</strong> {event.riskLevel}</p>
-      <p><strong>Ответственный охранник: </strong> {guard ? `${guard.fullName} (${guard.ranl})` : '-'}</p>
+      <p><strong>Ответственный охранник: </strong> {guard ? `${guard.fullName} (${guard.rank})` : '-'}</p>
       <p><strong>Необходимо охраны:</strong> {event.guardsCount} человек</p>
       <p><strong>Статус готовности:</strong> {event.status}</p>
       <hr />

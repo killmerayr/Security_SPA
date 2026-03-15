@@ -28,7 +28,7 @@ export default function GuardForm() {
       ? axios.put(`${GuardsUrl}/${id}`, formData)
       : axios.post(GuardsUrl, formData);
 
-    req.then(() => navigate(GuardsUrl));
+    req.then(() => navigate('/guards'));
   };
 
   return (
