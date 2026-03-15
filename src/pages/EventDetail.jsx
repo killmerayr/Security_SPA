@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/events';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const EventURL = `${API_URL}/events`;
 const GuardsUrl = `${API_URL}/guards`;
 
