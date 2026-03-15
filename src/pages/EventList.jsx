@@ -1,49 +1,52 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const EventURL = `${API_URL}/events`;
-const GuardsUrl = `${API_URL}/guards`;
 
-const EventDetail = () => {
-  const { id } = useParams();
-  const [event, setEvent] = useState(null);
-  const [guard, setGuard] = useState(null);
+const EventList = () => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setEvent(null);
-    setGuard(null);
+    axios.get(EventURL)
+      .then(res => setEvents(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
 
-    axios.get(`${EventURL}/${id}`)
-      .then(res => {
-        setEvent(res.data);
+  const handleDelete = (id) => {
+    if (!window.confirm("Удалить мероприятие?")) return;
+    axios.delete(`${EventURL}/${id}`)
+      .then(() => setEvents(prev => prev.filter(e => e.id !== id)));
+  };
 
-        if (res.data.guardId) {
-          return axios.get(`${GuardsUrl}/${res.data.guardId}`);
-        }
-        return null;
-      })
-      .then(gRes => {
-        if (gRes) setGuard(gRes.data);
-      })
-      .catch(err => console.error(err));
-  }, [id]);
-
-  if (!event) return <div>Загрузка деталей...</div>;
+  if (loading) return <p>Загрузка мероприятий...</p>;
 
   return (
-    <div style={{ padding: '20px', border: '2px solid #2196F3', borderRadius: '10px' }}>
-      <h1>{event.title}</h1>
-      <p><strong>Место:</strong> {event.location}</p>
-      <p><strong>Уровень опасности:</strong> {event.riskLevel}</p>
-      <p><strong>Ответственный охранник: </strong> {guard ? `${guard.fullName} (${guard.rank})` : '-'}</p>
-      <p><strong>Необходимо охраны:</strong> {event.guardsCount} человек</p>
-      <p><strong>Статус готовности:</strong> {event.status}</p>
-      <hr />
-      <Link to="/">Вернуться к списку</Link>
+    <div>
+      <h1>Список мероприятий</h1>
+      <Link to="/add">Добавить мероприятие</Link>
+
+      <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+        {events.map(e => (
+          <div key={e.id} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
+            <h3>{e.title}</h3>
+            <p>Место: {e.location}</p>
+            <p>Риск: {e.riskLevel}</p>
+            <p>Охрана: {e.guardsCount} чел</p>
+
+            <Link to={`/detail/${e.id}`}>Детали</Link>{" | "}
+            <Link to={`/edit/${e.id}`}>Редактировать</Link>{" | "}
+            <button onClick={() => handleDelete(e.id)} style={{ color: 'red' }}>
+              Удалить
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default EventDetail;
+export default EventList;
