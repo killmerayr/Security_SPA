@@ -15,8 +15,6 @@ const EventDetail = () => {
     setEvent(null);
     setGuard(null);
 
-    setEvents(prev => prev.filter(event => event.id !== id));
-    
     axios.get(`${EventURL}/${id}`)
       .then(res => {
         setEvent(res.data);
