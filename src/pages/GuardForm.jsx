@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/guards';
-const EventURL = `${API_URL}/events`;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const GuardsUrl = `${API_URL}/guards`;
 
 export default function GuardForm() {

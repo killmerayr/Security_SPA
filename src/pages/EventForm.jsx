@@ -5,19 +5,22 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const EventURL = `${API_URL}/events`;
 const GuardsUrl = `${API_URL}/guards`;
+const VenuesUrl = `${API_URL}/venues`;
 
 const EventForm = () => {
   const { id } = useParams(); 
   const navigate = useNavigate();
   const [guards, setGuards] = useState([]);
+  const [venues, setVenues] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
-    location: '',
+    date: '',
     riskLevel: 'low',
     guardsCount: 0,
     status: 'planned',
     type: 'internal',
-    guardId: ''
+    guardId: '',
+    venueId: ''
   });
   const [error, setError] = useState(null);
 
@@ -25,73 +28,166 @@ const EventForm = () => {
     if (id) {
       axios.get(`${EventURL}/${id}`)
         .then(res => setFormData(res.data))
-        .catch(err => console.error("Ошибка загрузки:", err));
+        .catch(err => console.error(err));
     }
   }, [id]);
 
   useEffect(() => {
     axios.get(`${GuardsUrl}`)
-    .then(res => setGuards(res.data))
-    .catch(err => console.error("Ошибка загрузки охранников", err));
+      .then(res => setGuards(res.data))
+      .catch(err => console.error(err));
+    
+    axios.get(`${VenuesUrl}`)
+      .then(res => setVenues(res.data))
+      .catch(err => console.error(err));
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Валидация
+    if (!formData.title.trim()) {
+      setError('Название обязательно');
+      return;
+    }
+    if (!formData.date) {
+      setError('Дата обязательна');
+      return;
+    }
     if (Number(formData.guardsCount) <= 0) {
       setError('Количество охраны должно быть больше 0');
       return;
     }
+    if (!formData.venueId) {
+      setError('Выберите площадку');
+      return;
+    }
+    
     setError(null);
+
     if (id) {
       axios.put(`${EventURL}/${id}`, formData)
         .then(() => {
           alert("Данные обновлены!");
           navigate('/');
         })
-        .catch(err => setError(err.message));
+        .catch(err => setError(`Ошибка обновления: ${err.message}`));
     } else {
       axios.post(EventURL, formData)
         .then(() => {
           alert("Мероприятие создано!");
           navigate('/');
         })
-        .catch(err => setError(err.message));
+        .catch(err => setError(`Ошибка создания: ${err.message}`));
     }
   };
 
   return (
-    <div>
-      <h2>{id ? "Редактирование" : "Новое мероприятие"}</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px' }}>
-        <input placeholder="Название" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
-        <input placeholder="Локация" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required />
-        
-        <label>Риск:</label>
-        <select value={formData.riskLevel} onChange={e => setFormData({...formData, riskLevel: e.target.value})}>
-          <option value="low">Низкий</option>
-          <option value="medium">Средний</option>
-          <option value="high">Высокий</option>
-        </select>
+    <div style={{ maxWidth: '500px', padding: '20px' }}>
+      <h2>{id ? "Редактирование мероприятия" : "Новое мероприятие"}</h2>
+      {error && <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffebee', borderRadius: '5px', marginBottom: '10px' }}>{error}</div>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div>
+          <label>Название</label>
+          <input 
+            placeholder="Название мероприятия" 
+            value={formData.title} 
+            onChange={e => setFormData({...formData, title: e.target.value})} 
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <label>Тип:</label>
-        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
-          <option value="internal">internal</option>
-          <option value="external">external</option>
-        </select>
+        <div>
+          <label>Дата</label>
+          <input 
+            type="date"
+            value={formData.date} 
+            onChange={e => setFormData({...formData, date: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
 
-        <label>Ответственный охранник</label>
-        <select value={formData.guardId} onChange={e => setFormData({...formData, guardId: e.target.value})} required>
-          <option value="">выбрать</option>
-          {guards.map(g => (
-            <option key={g.id} value={g.id}> {g.fullName} ({g.rank})
-            </option>
-          ))}
-        </select>
-        <label>Охрана (чел):</label>
-        <input type="number" value={formData.guardsCount} onChange={e => setFormData({...formData, guardsCount: e.target.value})} />
+        <div>
+          <label>Площадка</label>
+          <select 
+            value={formData.venueId} 
+            onChange={e => setFormData({...formData, venueId: e.target.value})} 
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          >
+            <option value="">Выбрать площадку</option>
+            {venues.map(v => (
+              <option key={v.id} value={v.id}>{v.name} (вместимость: {v.capacity})</option>
+            ))}
+          </select>
+        </div>
         
-        <button type="submit" style={{ padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
+        <div>
+          <label>Уровень риска</label>
+          <select 
+            value={formData.riskLevel} 
+            onChange={e => setFormData({...formData, riskLevel: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          >
+            <option value="low">Низкий</option>
+            <option value="medium">Средний</option>
+            <option value="high">Высокий</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Тип мероприятия</label>
+          <select 
+            value={formData.type} 
+            onChange={e => setFormData({...formData, type: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          >
+            <option value="internal">Внутреннее</option>
+            <option value="external">Внешнее</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Ответственный охранник</label>
+          <select 
+            value={formData.guardId} 
+            onChange={e => setFormData({...formData, guardId: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          >
+            <option value="">Не назначен</option>
+            {guards.map(g => (
+              <option key={g.id} value={g.id}>{g.fullName} ({g.rank})</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Требуемая охрана (человек)</label>
+          <input 
+            type="number" 
+            min="1"
+            value={formData.guardsCount} 
+            onChange={e => setFormData({...formData, guardsCount: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div>
+          <label>Статус</label>
+          <select 
+            value={formData.status} 
+            onChange={e => setFormData({...formData, status: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          >
+            <option value="planned">Планируется</option>
+            <option value="active">Активное</option>
+            <option value="completed">Завершено</option>
+          </select>
+        </div>
+        
+        <button 
+          type="submit" 
+          style={{ padding: '10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+        >
           {id ? "Сохранить изменения" : "Создать мероприятие"}
         </button>
       </form>

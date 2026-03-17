@@ -4,21 +4,34 @@
       "id": "1",
       "title": "Форум кибербезопасности",
       "type": "internal",
-      "location": "Зал A-10",
       "riskLevel": "high",
       "guardsCount": 15,
       "status": "planned",
-      "guardId": "g1"
+      "guardId": "g1",
+      "venueId": "v1",
+      "date": "2024-04-15"
     },
     {
       "id": "2",
       "title": "Городской марафон",
       "type": "external",
-      "location": "Центральная площадь",
       "riskLevel": "medium",
       "guardsCount": 50,
       "status": "active",
-      "guardId": "g2"
+      "guardId": "g2",
+      "venueId": "v2",
+      "date": "2024-05-01"
+    },
+    {
+      "id": "3",
+      "title": "Концерт электронной музыки",
+      "type": "external",
+      "riskLevel": "high",
+      "guardsCount": 30,
+      "status": "planned",
+      "guardId": "g1",
+      "venueId": "v3",
+      "date": "2024-06-10"
     }
   ],
   "guards": [
@@ -26,13 +39,48 @@
       "id": "g1",
       "fullName": "Иван Петров",
       "rank": "старший смены",
-      "phone": "+7-900-111-22-33"
+      "phone": "+7-900-111-22-33",
+      "experience": 10
     },
     {
       "id": "g2",
       "fullName": "Алексей Смирнов",
       "rank": "охранник",
-      "phone": "+7-900-444-55-66"
+      "phone": "+7-900-444-55-66",
+      "experience": 5
+    },
+    {
+      "id": "g3",
+      "fullName": "Мария Волкова",
+      "rank": "охранник",
+      "phone": "+7-900-777-88-99",
+      "experience": 3
+    }
+  ],
+  "venues": [
+    {
+      "id": "v1",
+      "name": "Конференц-центр \"Прогресс\"",
+      "address": "ул. Невского, 25",
+      "capacity": 500,
+      "type": "indoor",
+      "parking": true
+    },
+    {
+      "id": "v2",
+      "name": "Центральная площадь",
+      "address": "Площадь Революции, 1",
+      "capacity": 5000,
+      "type": "outdoor",
+      "parking": false
+    },
+    {
+      "id": "v3",
+      "name": "Арена спорта и развлечений",
+      "address": "пр. Лукоморье, 100",
+      "capacity": 3000,
+      "type": "indoor",
+      "parking": true
     }
   ]
 }
