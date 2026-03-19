@@ -90,9 +90,9 @@ function App() {
           color: '#fff',
           padding: '20px',
           textAlign: 'center',
-          marginTop: '40px'
+          marginTop: '40px',
+          minHeight: '20px'
         }}>
-          <p style={{ margin: 0 }}>© 2024 Система управления мероприятиями • Все права защищены</p>
         </footer>
       </div>
     </Router>
