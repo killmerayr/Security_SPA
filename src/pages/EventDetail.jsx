@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import EventMap from '../components/EventMap';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const EventURL = `${API_URL}/events`;
@@ -131,7 +132,9 @@ const EventDetail = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <EventMap venue={venue} />
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <Link to="/" style={{ 
             flex: 1,
             padding: '10px',

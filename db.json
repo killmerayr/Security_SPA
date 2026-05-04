@@ -64,7 +64,9 @@
       "address": "ул. Невского, 25",
       "capacity": 500,
       "type": "indoor",
-      "parking": true
+      "parking": true,
+      "latitude": 59.9311,
+      "longitude": 30.3609
     },
     {
       "id": "v2",
@@ -72,7 +74,9 @@
       "address": "Площадь Революции, 1",
       "capacity": 5000,
       "type": "outdoor",
-      "parking": false
+      "parking": false,
+      "latitude": 59.9311,
+      "longitude": 30.3106
     },
     {
       "id": "v3",
@@ -80,7 +84,9 @@
       "address": "пр. Лукоморье, 100",
       "capacity": 3000,
       "type": "indoor",
-      "parking": true
+      "parking": true,
+      "latitude": 59.9789,
+      "longitude": 30.3156
     }
   ]
 }
