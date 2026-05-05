@@ -8,7 +8,7 @@
       "guardsCount": 15,
       "status": "planned",
       "guardId": "g1",
-      "venueId": "v1",
+      "venueId": "v3",
       "date": "2024-04-15"
     },
     {
@@ -30,7 +30,7 @@
       "guardsCount": 30,
       "status": "planned",
       "guardId": "g1",
-      "venueId": "v3",
+      "venueId": "v1",
       "date": "2024-06-10"
     }
   ],
