@@ -13,7 +13,9 @@ const VenueForm = () => {
     address: '',
     capacity: 0,
     type: 'indoor',
-    parking: false
+    parking: false,
+    latitude: 0,
+    longitude: 0
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,10 @@ const VenueForm = () => {
     }
     if (Number(formData.capacity) <= 0) {
       setError('Вместимость должна быть больше 0');
+      return;
+    }
+    if (!formData.latitude || !formData.longitude) {
+      setError('Координаты (широта и долгота) обязательны для отображения карты');
       return;
     }
     
@@ -118,6 +124,32 @@ const VenueForm = () => {
             <option value="indoor">Закрытое помещение</option>
             <option value="outdoor">Открытая площадка</option>
           </select>
+        </div>
+
+        <div>
+          <label>Широта (latitude)</label>
+          <input 
+            type="number" 
+            step="0.0001"
+            placeholder="например: 59.9311"
+            value={formData.latitude} 
+            onChange={e => setFormData({...formData, latitude: parseFloat(e.target.value) || 0})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+
+        <div>
+          <label>Долгота (longitude)</label>
+          <input 
+            type="number" 
+            step="0.0001"
+            placeholder="например: 30.3609"
+            value={formData.longitude} 
+            onChange={e => setFormData({...formData, longitude: parseFloat(e.target.value) || 0})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
         </div>
 
         <div style={{ 

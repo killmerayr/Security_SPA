@@ -1,10 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const EventMap = ({ venue }) => {
+  const mapRef = useRef(null);
+
   useEffect(() => {
     if (!venue || !venue.latitude || !venue.longitude) {
+      return;
+    }
+
+    // Если карта уже инициализирована, очистить её
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+    const mapContainer = document.getElementById('event-map');
+    if (!mapContainer) {
       return;
     }
 
@@ -13,6 +26,8 @@ const EventMap = ({ venue }) => {
       [venue.latitude, venue.longitude],
       13
     );
+
+    mapRef.current = map;
 
     // Добавление слоя OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -27,7 +42,10 @@ const EventMap = ({ venue }) => {
 
     // Очистка при размонтировании компонента
     return () => {
-      map.remove();
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, [venue]);
 

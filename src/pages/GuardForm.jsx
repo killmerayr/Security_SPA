@@ -12,8 +12,10 @@ export default function GuardForm() {
   const [formData, setFormData] = useState({
     fullName: '',
     rank: '',
-    phone: ''
+    phone: '',
+    experience: 0
   });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -23,37 +25,95 @@ export default function GuardForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    if (!formData.fullName.trim()) {
+      setError('ФИО обязательно');
+      return;
+    }
+    if (!formData.rank.trim()) {
+      setError('Должность обязательна');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError('Телефон обязателен');
+      return;
+    }
+    if (Number(formData.experience) < 0) {
+      setError('Опыт не может быть отрицательным');
+      return;
+    }
+    
+    setError(null);
+    
     const req = id
       ? axios.put(`${GuardsUrl}/${id}`, formData)
       : axios.post(GuardsUrl, formData);
 
-    req.then(() => navigate('/guards'));
+    req
+      .then(() => {
+        alert(id ? 'Охранник обновлён!' : 'Охранник добавлен!');
+        navigate('/guards');
+      })
+      .catch(err => setError(`Ошибка: ${err.message}`));
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: '500px', padding: '20px' }}>
       <h2>{id ? "Редактировать охранника" : "Добавить охранника"}</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320 }}>
-        <input
-          placeholder="ФИО"
-          value={formData.fullName}
-          onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Должность"
-          value={formData.rank}
-          onChange={e => setFormData({ ...formData, rank: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Телефон"
-          value={formData.phone}
-          onChange={e => setFormData({ ...formData, phone: e.target.value })}
-          required
-        />
+      {error && <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffebee', borderRadius: '5px', marginBottom: '10px' }}>{error}</div>}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div>
+          <label>ФИО</label>
+          <input
+            placeholder="ФИО"
+            value={formData.fullName}
+            onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+        <div>
+          <label>Должность</label>
+          <input
+            placeholder="Должность"
+            value={formData.rank}
+            onChange={e => setFormData({ ...formData, rank: e.target.value })}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+        <div>
+          <label>Телефон</label>
+          <input
+            placeholder="Телефон"
+            value={formData.phone}
+            onChange={e => setFormData({ ...formData, phone: e.target.value })}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+        <div>
+          <label>Опыт работы (лет)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="Опыт работы"
+            value={formData.experience}
+            onChange={e => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
 
-        <button type="submit">
+        <button type="submit" style={{ 
+          padding: '10px', 
+          background: '#4CAF50', 
+          color: 'white', 
+          border: 'none', 
+          borderRadius: '5px', 
+          cursor: 'pointer',
+          fontSize: '16px'
+        }}>
           {id ? "Сохранить" : "Создать"}
         </button>
       </form>
