@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import EventMap from '../components/EventMap';
 import { API_URL } from '../config/api';
 
 const VenuesUrl = `${API_URL}/venues`;
@@ -78,7 +79,9 @@ const VenueDetail = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <EventMap venue={venue} />
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <Link to="/venues" style={{ 
             flex: 1,
             padding: '10px',

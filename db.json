@@ -61,32 +61,32 @@
     {
       "id": "v1",
       "name": "Конференц-центр \"Прогресс\"",
-      "address": "ул. Невского, 25",
+      "address": "пр. Невского, 25",
       "capacity": 500,
       "type": "indoor",
       "parking": true,
-      "latitude": 59.9311,
+      "latitude": 59.9306,
       "longitude": 30.3609
     },
     {
       "id": "v2",
       "name": "Центральная площадь",
-      "address": "Площадь Революции, 1",
+      "address": "Дворцовая площадь, 1",
       "capacity": 5000,
       "type": "outdoor",
       "parking": false,
       "latitude": 59.9311,
-      "longitude": 30.3106
+      "longitude": 30.3157
     },
     {
       "id": "v3",
       "name": "Арена спорта и развлечений",
-      "address": "пр. Лукоморье, 100",
+      "address": "ул. Седова, 100",
       "capacity": 3000,
       "type": "indoor",
       "parking": true,
       "latitude": 59.9789,
-      "longitude": 30.3156
+      "longitude": 30.2656
     }
   ]
 }
