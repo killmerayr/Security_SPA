@@ -8,7 +8,7 @@
       "guardsCount": 15,
       "status": "planned",
       "guardId": "g1",
-      "venueId": "v3",
+      "venueId": "v2",
       "date": "2024-04-15"
     },
     {
@@ -32,6 +32,17 @@
       "guardId": "g1",
       "venueId": "v1",
       "date": "2024-06-10"
+    },
+    {
+      "id": "b730",
+      "title": "Тестовое мероприятие",
+      "date": "2024-07-15",
+      "riskLevel": "low",
+      "guardsCount": "20",
+      "status": "planned",
+      "type": "internal",
+      "guardId": "",
+      "venueId": "v1"
     }
   ],
   "guards": [

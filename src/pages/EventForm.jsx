@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api';
+import VenueSelector from '../components/VenueSelector';
 
 const EventURL = `${API_URL}/events`;
 const GuardsUrl = `${API_URL}/guards`;
@@ -108,17 +109,17 @@ const EventForm = () => {
         </div>
 
         <div>
-          <label>Площадка</label>
-          <select 
-            value={formData.venueId} 
-            onChange={e => setFormData({...formData, venueId: e.target.value})} 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          >
-            <option value="">Выбрать площадку</option>
-            {venues.map(v => (
-              <option key={v.id} value={v.id}>{v.name} (вместимость: {v.capacity})</option>
-            ))}
-          </select>
+          <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Выбор площадки на карте</label>
+          <VenueSelector 
+            venues={venues}
+            selectedVenueId={formData.venueId}
+            onVenueSelect={(venueId) => setFormData({...formData, venueId})}
+          />
+          {formData.venueId && (
+            <div style={{ padding: '10px', backgroundColor: '#e8f5e9', borderRadius: '4px', marginTop: '10px', color: '#2e7d32', fontSize: '14px' }}>
+              ✓ Площадка выбрана: <strong>{venues.find(v => v.id === formData.venueId)?.name}</strong>
+            </div>
+          )}
         </div>
         
         <div>
