@@ -69,7 +69,7 @@ const VenueForm = () => {
       setShowSearchResults(false);
       return;
     }
-
+    console.debug('searchAddress start', { query });
     setIsSearching(true);
     try {
       let results = [];
@@ -80,24 +80,29 @@ const VenueForm = () => {
           const yandexResponse = await fetch(
             `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json&lang=ru_RU&results=10`
           );
-
           if (yandexResponse.ok) {
             const data = await yandexResponse.json();
-            const features = data.response.GeoObjectCollection.featureMember || [];
+            const features = (data && data.response && data.response.GeoObjectCollection && data.response.GeoObjectCollection.featureMember) || [];
+            console.debug('yandex search results count', features.length);
 
             results = features.map((feature) => {
-              const geoObject = feature.GeoObject;
-              const point = geoObject.Point.pos.split(' ');
-              const lon = parseFloat(point[0]);
-              const lat = parseFloat(point[1]);
+              const geoObject = feature.GeoObject || {};
+              const pos = (geoObject.Point && geoObject.Point.pos) || '';
+              const point = pos.split(' ');
+              const lon = parseFloat(point[0]) || 0;
+              const lat = parseFloat(point[1]) || 0;
+
+              const text = (geoObject.metaDataProperty && geoObject.metaDataProperty.GeocoderMetaData && geoObject.metaDataProperty.GeocoderMetaData.text) || '';
 
               return {
                 lat,
                 lon,
-                display_name: geoObject.metaDataProperty.GeocoderMetaData.text,
+                display_name: text,
                 source: 'yandex'
               };
             });
+          } else {
+            console.warn('Yandex geocode returned not ok', yandexResponse.status);
           }
         } catch (error) {
           console.warn('Yandex API ошибка, переходим на Photon:', error);
@@ -113,13 +118,33 @@ const VenueForm = () => {
 
           if (photonResponse.ok) {
             const data = await photonResponse.json();
-            results = (data.features || []).map((feature) => ({
-              lat: feature.geometry.coordinates[1],
-              lon: feature.geometry.coordinates[0],
-              display_name: feature.properties.name ||
-                `${feature.properties.street || ''} ${feature.properties.city || ''}`.trim(),
-              source: 'photon'
-            }));
+            const feats = data.features || [];
+            console.debug('photon search results count', feats.length);
+
+            results = feats.map((feature) => {
+              const coords = (feature.geometry && feature.geometry.coordinates) || [];
+              const props = feature.properties || {};
+
+              // Build a robust display name from available properties
+              const parts = [];
+              if (props.name) parts.push(props.name);
+              if (props.street) parts.push(props.street);
+              if (props.housenumber) parts.push(props.housenumber);
+              if (props.city) parts.push(props.city);
+              if (props.state) parts.push(props.state);
+              if (props.country) parts.push(props.country);
+
+              const display = parts.join(', ') || props.osm_value || props.label || '';
+
+              return {
+                lat: coords[1] || 0,
+                lon: coords[0] || 0,
+                display_name: display,
+                source: 'photon'
+              };
+            });
+          } else {
+            console.warn('Photon geocode returned not ok', photonResponse.status);
           }
         } catch (error) {
           console.error('Photon API ошибка:', error);
@@ -128,6 +153,7 @@ const VenueForm = () => {
 
       setSearchResults(results);
       setShowSearchResults(results.length > 0);
+      console.debug('searchAddress finished', { query, resultsCount: results.length });
     } catch (error) {
       console.error('Ошибка поиска адреса:', error);
       setSearchResults([]);
