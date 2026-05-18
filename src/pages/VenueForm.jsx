@@ -92,17 +92,6 @@ const VenueForm = () => {
           />
         </div>
 
-        <div>
-          <label>Адрес</label>
-          <input 
-            placeholder="Полный адрес площадки"
-            value={formData.address} 
-            onChange={e => setFormData({...formData, address: e.target.value})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            required
-          />
-        </div>
-
         {/* Карта для выбора локации */}
         <VenueMapPicker 
           latitude={formData.latitude}
@@ -117,6 +106,19 @@ const VenueForm = () => {
             });
           }}
         />
+
+        {/* Поле редактирования адреса */}
+        <div>
+          <label>Адрес</label>
+          <input 
+            type="text"
+            placeholder="Введите адрес площадки"
+            value={formData.address} 
+            onChange={e => setFormData({...formData, address: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
 
         <div>
           <label>Вместимость (человек)</label>

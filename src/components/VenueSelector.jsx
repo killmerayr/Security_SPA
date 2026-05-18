@@ -1,66 +1,51 @@
 import { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIconRetina from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Фиксим иконки маркеров для бандлеров
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIconRetina,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-// Пользовательские иконки для маркеров
-const createCustomIcon = (isSelected) => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: ${isSelected ? '#FF5722' : '#2196F3'};
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 3px solid white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      transition: all 0.2s;
-    ">●</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
-    className: 'custom-marker'
-  });
-};
+import { YANDEX_API_KEY } from '../config/api';
 
 const VenueSelector = ({ venues, selectedVenueId, onVenueSelect }) => {
   const mapRef = useRef(null);
-  const markersRef = useRef({});
+  const mapInstanceRef = useRef(null);
+  const placemarksRef = useRef({});
 
+  // Загрузка Яндекс Maps API (один раз)
   useEffect(() => {
-    if (!venues || venues.length === 0) {
+    // Если Yandex Maps уже загружена, инициализируем сразу
+    if (window.ymaps && venues.length > 0) {
+      initializeMap();
       return;
     }
 
-    // Если карта уже инициализирована, очистить её
-    if (mapRef.current) {
-      mapRef.current.remove();
-      mapRef.current = null;
-      markersRef.current = {};
+    // Если скрипт уже загружается/загружен, используем готовый
+    if (document.querySelector('script[src*="api-maps.yandex.ru"]')) {
+      if (window.ymaps) {
+        window.ymaps.ready(initializeMap);
+      }
+      return;
     }
 
-    const mapContainer = document.getElementById('venue-selector-map');
-    if (!mapContainer) {
-      return;
+    // Загружаем скрипт, если это первый компонент использующий Yandex Maps
+    const script = document.createElement('script');
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${YANDEX_API_KEY}&lang=ru_RU`;
+    script.async = true;
+    script.onload = () => {
+      if (venues.length > 0 && window.ymaps) {
+        window.ymaps.ready(initializeMap);
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Не удаляем скрипт
+    };
+  }, [venues, selectedVenueId]);
+
+  const initializeMap = () => {
+    if (!window.ymaps || !venues || venues.length === 0 || !mapRef.current) return;
+
+    // Если карта уже инициализирована, удалить её
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.destroy();
+      mapInstanceRef.current = null;
+      placemarksRef.current = {};
     }
 
     // Вычисляем центр и границы карты
@@ -70,82 +55,62 @@ const VenueSelector = ({ venues, selectedVenueId, onVenueSelect }) => {
     const centerLng = (Math.max(...longitudes) + Math.min(...longitudes)) / 2;
 
     // Инициализация карты
-    const map = L.map('venue-selector-map').setView([centerLat, centerLng], 12);
-    mapRef.current = map;
+    const map = new window.ymaps.Map(mapRef.current, {
+      center: [centerLat, centerLng],
+      zoom: 12,
+      controls: ['zoomControl', 'fullscreenControl']
+    });
 
-    // Добавление слоя OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
+    mapInstanceRef.current = map;
 
     // Добавление маркеров для каждой площадки
     venues.forEach(venue => {
       const isSelected = venue.id === selectedVenueId;
-      const marker = L.marker(
+
+      const placemark = new window.ymaps.Placemark(
         [venue.latitude, venue.longitude],
-        { icon: createCustomIcon(isSelected) }
-      ).addTo(map);
+        {
+          balloonContent: `
+            <div style="font-family: Arial; width: 280px;">
+              <h3 style="margin: 0 0 8px 0; color: #2196F3; font-size: 16px;">${venue.name}</h3>
+              <p style="margin: 0 0 5px 0;"><strong>📍 Адрес:</strong></p>
+              <p style="margin: 0 0 8px 0; color: #555; font-size: 14px;">${venue.address}</p>
+              <p style="margin: 0 0 5px 0;"><strong>👥 Вместимость:</strong> ${venue.capacity} человек</p>
+              <p style="margin: 0 0 5px 0;"><strong>🏢 Тип:</strong> ${venue.type === 'indoor' ? 'Закрытое' : 'Открытое'}</p>
+              <p style="margin: 0 0 10px 0; font-size: 12px; color: #999;">Координаты: ${venue.latitude.toFixed(4)}, ${venue.longitude.toFixed(4)}</p>
+            </div>
+          `,
+          hintContent: venue.name,
+        },
+        {
+          preset: isSelected ? 'islands#redDotIcon' : 'islands#blueDotIcon',
+        }
+      );
 
-      marker.bindPopup(`
-        <div style="font-family: Arial, sans-serif; width: 280px;">
-          <h3 style="margin: 0 0 8px 0; color: #2196F3; font-size: 16px;">${venue.name}</h3>
-          <p style="margin: 0 0 5px 0;"><strong>📍 Адрес:</strong></p>
-          <p style="margin: 0 0 8px 0; color: #555; font-size: 14px;">${venue.address}</p>
-          <p style="margin: 0 0 5px 0;"><strong>👥 Вместимость:</strong> ${venue.capacity} человек</p>
-          <p style="margin: 0 0 5px 0;"><strong>🏢 Тип:</strong> ${venue.type === 'indoor' ? 'Закрытое' : 'Открытое'}</p>
-          <p style="margin: 0 0 10px 0; font-size: 12px; color: #999;">Координаты: ${venue.latitude.toFixed(4)}, ${venue.longitude.toFixed(4)}</p>
-          <button onclick="window.selectVenue_${venue.id}()" style="
-            width: 100%;
-            padding: 8px;
-            background-color: ${isSelected ? '#FF5722' : '#2196F3'};
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-          ">
-            ${isSelected ? '✓ Выбрано' : 'Выбрать'}
-          </button>
-        </div>
-      `);
-
-      // Регистрируем функцию для выбора площадки
-      window[`selectVenue_${venue.id}`] = () => {
-        onVenueSelect(venue.id);
-        marker.closePopup();
-      };
-
-      // Добавляем клик на маркер
-      marker.on('click', () => {
+      // Клик на маркер
+      placemark.events.add('click', () => {
         onVenueSelect(venue.id);
       });
 
-      markersRef.current[venue.id] = marker;
+      map.geoObjects.add(placemark);
+      placemarksRef.current[venue.id] = placemark;
     });
 
-    // Автоматически центруем карту на всех маркерах
-    const group = new L.featureGroup(Object.values(markersRef.current));
-    map.fitBounds(group.getBounds().pad(0.1));
-
-    // Очистка при размонтировании компонента
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-        markersRef.current = {};
-      }
-    };
-  }, [venues, selectedVenueId, onVenueSelect]);
+    // Автоматически центруем карту на все маркеры
+    const bounds = map.geoObjects.getBounds();
+    if (bounds) {
+      map.setBounds(bounds, { checkZoomRange: true });
+    }
+  };
 
   // Обновляем иконки при изменении выбранной площадки
   useEffect(() => {
-    if (mapRef.current && markersRef.current) {
-      Object.keys(markersRef.current).forEach(venueId => {
-        const marker = markersRef.current[venueId];
+    if (mapInstanceRef.current && placemarksRef.current && selectedVenueId) {
+      Object.keys(placemarksRef.current).forEach(venueId => {
+        const placemark = placemarksRef.current[venueId];
         const isSelected = venueId === selectedVenueId;
-        marker.setIcon(createCustomIcon(isSelected));
+        const preset = isSelected ? 'islands#redDotIcon' : 'islands#blueDotIcon';
+        placemark.options.set('preset', preset);
       });
     }
   }, [selectedVenueId]);
@@ -157,7 +122,7 @@ const VenueSelector = ({ venues, selectedVenueId, onVenueSelect }) => {
   return (
     <div style={{ width: '100%' }}>
       <div
-        id="venue-selector-map"
+        ref={mapRef}
         style={{
           width: '100%',
           height: '400px',
@@ -166,7 +131,7 @@ const VenueSelector = ({ venues, selectedVenueId, onVenueSelect }) => {
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           marginBottom: '15px'
         }}
-      ></div>
+      />
       <div style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '8px', fontSize: '14px', color: '#666' }}>
         <strong>Подсказка:</strong> Кликните на маркер площадки чтобы её выбрать. Выбранная площадка отмечена красным цветом.
       </div>

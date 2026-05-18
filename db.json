@@ -95,9 +95,9 @@
       "address": "ул. Седова, 100",
       "capacity": 3000,
       "type": "indoor",
-      "parking": true,
-      "latitude": 59.9789,
-      "longitude": 30.2656
+      "parking": false,
+      "latitude": 59.97781048864499,
+      "longitude": 30.26756690045805
     },
     {
       "id": "4827",
@@ -108,6 +108,16 @@
       "parking": false,
       "latitude": 55.7535908,
       "longitude": 37.6215013
+    },
+    {
+      "id": "a461",
+      "name": "Красная площадь",
+      "address": "Москва, Красная площадь, 1",
+      "capacity": "500",
+      "type": "indoor",
+      "parking": false,
+      "latitude": 55.75598301601476,
+      "longitude": 37.616986181545215
     }
   ]
 }

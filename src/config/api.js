@@ -18,3 +18,7 @@ const getApiUrl = () => {
 };
 
 export const API_URL = getApiUrl();
+
+// Yandex Geocoding API ключ (вставьте свой ключ сюда или установите как переменную окружения)
+// Получить ключ: https://developer.tech.yandex.ru/
+export const YANDEX_API_KEY = import.meta.env.VITE_YANDEX_API_KEY || '';
