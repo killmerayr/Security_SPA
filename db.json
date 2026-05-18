@@ -72,12 +72,12 @@
     {
       "id": "v1",
       "name": "Конференц-центр \"Прогресс\"",
-      "address": "ул. Восстания, 42",
+      "address": "Rue Gustave Eiffel, Neuville-en-Ferrain, Lille, Nord, Hauts-de-France, Metropolitan France, 59960, France",
       "capacity": 500,
       "type": "indoor",
-      "parking": true,
-      "latitude": 59.9306,
-      "longitude": 30.3609
+      "parking": false,
+      "latitude": 50.741355,
+      "longitude": 3.1490151
     },
     {
       "id": "v2",
@@ -98,6 +98,16 @@
       "parking": true,
       "latitude": 59.9789,
       "longitude": 30.2656
+    },
+    {
+      "id": "4827",
+      "name": "Красная Площадь",
+      "address": "Red Square, Kitay-gorod, 4, Tverskoy District, Moscow, Central Federal District, 109012, Russia",
+      "capacity": "10000",
+      "type": "indoor",
+      "parking": false,
+      "latitude": 55.7535908,
+      "longitude": 37.6215013
     }
   ]
 }

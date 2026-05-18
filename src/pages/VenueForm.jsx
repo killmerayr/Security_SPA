@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config/api';
+import VenueMapPicker from '../components/VenueMapPicker';
 
 const VenuesUrl = `${API_URL}/venues`;
 
@@ -102,6 +103,21 @@ const VenueForm = () => {
           />
         </div>
 
+        {/* Карта для выбора локации */}
+        <VenueMapPicker 
+          latitude={formData.latitude}
+          longitude={formData.longitude}
+          address={formData.address}
+          onLocationChange={(lat, lon, addr = null) => {
+            setFormData({
+              ...formData,
+              latitude: lat,
+              longitude: lon,
+              address: addr || formData.address
+            });
+          }}
+        />
+
         <div>
           <label>Вместимость (человек)</label>
           <input 
@@ -124,32 +140,6 @@ const VenueForm = () => {
             <option value="indoor">Закрытое помещение</option>
             <option value="outdoor">Открытая площадка</option>
           </select>
-        </div>
-
-        <div>
-          <label>Широта (latitude)</label>
-          <input 
-            type="number" 
-            step="0.0001"
-            placeholder="например: 59.9311"
-            value={formData.latitude} 
-            onChange={e => setFormData({...formData, latitude: parseFloat(e.target.value) || 0})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Долгота (longitude)</label>
-          <input 
-            type="number" 
-            step="0.0001"
-            placeholder="например: 30.3609"
-            value={formData.longitude} 
-            onChange={e => setFormData({...formData, longitude: parseFloat(e.target.value) || 0})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            required
-          />
         </div>
 
         <div style={{ 
