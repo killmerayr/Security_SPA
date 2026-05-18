@@ -141,7 +141,3 @@ const VenueMapPicker = ({ latitude, longitude, address = '' }) => {
 };
 
 export default VenueMapPicker;
-//   );
-// };
-
-export default VenueMapPicker;
