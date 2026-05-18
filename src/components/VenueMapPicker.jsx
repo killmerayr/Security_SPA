@@ -1,15 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { YANDEX_API_KEY } from '../config/api';
 
-const VenueMapPicker = ({ latitude, longitude, onLocationChange, address = '' }) => {
+const VenueMapPicker = ({ latitude, longitude, address = '' }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const placemarksRef = useRef([]);
-  const debounceTimerRef = useRef(null);
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(address);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
 
   // Загрузка Яндекс Maps API (один раз)
   useEffect(() => {
@@ -58,12 +53,6 @@ const VenueMapPicker = ({ latitude, longitude, onLocationChange, address = '' })
 
       mapInstanceRef.current = map;
 
-      // Добавление маркера при клике на карту
-      map.events.add('click', (e) => {
-        const coords = e.get('coords');
-        onLocationChange(coords[0], coords[1]);
-      });
-
       // Добавление начального маркера
       if (latitude && longitude) {
         addMarker(map, latitude, longitude);
@@ -108,214 +97,9 @@ const VenueMapPicker = ({ latitude, longitude, onLocationChange, address = '' })
     addMarker(mapInstanceRef.current, latitude, longitude);
   }, [latitude, longitude]);
 
-  // Debounce для поиска адресов
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      searchAddress(searchQuery);
-    }, 800);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery]);
-
-  // Поиск адресов через Yandex или Photon API
-  const searchAddress = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      let results = [];
-
-      // Пробуем Yandex если есть ключ
-      if (YANDEX_API_KEY) {
-        try {
-          const yandexResponse = await fetch(
-            `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json&lang=ru_RU&results=10`
-          );
-
-          if (yandexResponse.ok) {
-            const data = await yandexResponse.json();
-            const features = data.response.GeoObjectCollection.featureMember || [];
-
-            results = features.map((feature) => {
-              const geoObject = feature.GeoObject;
-              const point = geoObject.Point.pos.split(' ');
-              const lon = parseFloat(point[0]);
-              const lat = parseFloat(point[1]);
-
-              return {
-                lat: lat.toString(),
-                lon: lon.toString(),
-                display_name: geoObject.metaDataProperty.GeocoderMetaData.text,
-                source: 'yandex'
-              };
-            });
-          }
-        } catch (error) {
-          console.warn('Yandex API ошибка, переходим на Photon:', error);
-        }
-      }
-
-      // Если Yandex не сработал или ключа нет, используем Photon
-      if (results.length === 0) {
-        const photonResponse = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lang=ru&limit=10`
-        );
-
-        if (photonResponse.ok) {
-          const data = await photonResponse.json();
-          results = (data.features || []).map((feature) => ({
-            lat: feature.geometry.coordinates[1].toString(),
-            lon: feature.geometry.coordinates[0].toString(),
-            display_name: feature.properties.name ||
-              `${feature.properties.street || ''} ${feature.properties.city || ''}`.trim(),
-            source: 'photon'
-          }));
-        }
-      }
-
-      setSearchResults(results);
-      setShowResults(results.length > 0);
-    } catch (error) {
-      console.error('Ошибка поиска адреса:', error);
-      setSearchResults([]);
-      setShowResults(false);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-  };
-
-  const handleSelectAddress = (result) => {
-    const { lat, lon, display_name } = result;
-    setSearchQuery(display_name);
-    onLocationChange(parseFloat(lat), parseFloat(lon), display_name);
-    setShowResults(false);
-  };
-
   return (
     <div style={{ marginBottom: '20px' }}>
-      <h3>Выбор местоположения площадки</h3>
-
-      {/* Поиск адреса */}
-      <div style={{ marginBottom: '15px', position: 'relative' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Поиск адреса
-        </label>
-        <input
-          type="text"
-          placeholder="Введите адрес для поиска..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          style={{
-            width: '100%',
-            padding: '10px',
-            boxSizing: 'border-box',
-            border: '1px solid #ccc',
-            borderRadius: '5px',
-            fontSize: '14px',
-          }}
-        />
-
-        {/* Результаты поиска */}
-        {showResults && searchResults.length > 0 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              backgroundColor: 'white',
-              border: '1px solid #ccc',
-              borderTop: 'none',
-              borderRadius: '0 0 5px 5px',
-              maxHeight: '200px',
-              overflowY: 'auto',
-              zIndex: 1000,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            }}
-          >
-            {searchResults.map((result, index) => (
-              <div
-                key={index}
-                onClick={() => handleSelectAddress(result)}
-                style={{
-                  padding: '10px',
-                  borderBottom: index < searchResults.length - 1 ? '1px solid #eee' : 'none',
-                  cursor: 'pointer',
-                  backgroundColor: '#fafafa',
-                  transition: 'backgroundColor 0.2s',
-                }}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = '#f0f0f0')}
-                onMouseLeave={(e) => (e.target.style.backgroundColor = '#fafafa')}
-              >
-                <div style={{ fontSize: '13px', fontWeight: '500' }}>
-                  {result.display_name.split(',')[0]}
-                </div>
-                <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
-                  {result.display_name.substring(result.display_name.indexOf(',') + 1)}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {showResults && searchResults.length === 0 && !isSearching && searchQuery.trim() && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              backgroundColor: 'white',
-              border: '1px solid #ccc',
-              borderTop: 'none',
-              padding: '10px',
-              borderRadius: '0 0 5px 5px',
-              fontSize: '13px',
-              color: '#999',
-              zIndex: 1000,
-            }}
-          >
-            Адреса не найдены
-          </div>
-        )}
-      </div>
-
-      {/* Инструкция */}
-      <div
-        style={{
-          padding: '10px',
-          backgroundColor: '#e3f2fd',
-          borderRadius: '5px',
-          marginBottom: '15px',
-          fontSize: '13px',
-          color: '#1976d2',
-        }}
-      >
-        💡 Поищите адрес выше или кликните на карту для установки координат
-      </div>
+      <h3>Предпросмотр местоположения площадки</h3>
 
       {/* Карта */}
       <div
@@ -342,14 +126,12 @@ const VenueMapPicker = ({ latitude, longitude, onLocationChange, address = '' })
             color: '#666',
           }}
         >
-          <strong>Координаты:</strong> {latitude.toFixed(4)}, {longitude.toFixed(4)}
+          <strong>✓ Координаты:</strong> {latitude.toFixed(4)}, {longitude.toFixed(4)}
           {address && (
             <>
               <br />
-              <strong style={{ marginTop: '8px', display: 'block' }}>Адрес:</strong>
-              <div style={{ marginTop: '5px', color: '#333', fontWeight: '500' }}>
-                {address}
-              </div>
+              <strong style={{ marginTop: '8px', display: 'block' }}>✓ Адрес:</strong>
+              <div style={{ marginTop: '5px', color: '#333', fontWeight: '500' }}>{address}</div>
             </>
           )}
         </div>
@@ -357,5 +139,9 @@ const VenueMapPicker = ({ latitude, longitude, onLocationChange, address = '' })
     </div>
   );
 };
+
+export default VenueMapPicker;
+//   );
+// };
 
 export default VenueMapPicker;

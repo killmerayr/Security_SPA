@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../config/api';
+import { API_URL, YANDEX_API_KEY } from '../config/api';
 import VenueMapPicker from '../components/VenueMapPicker';
 
 const VenuesUrl = `${API_URL}/venues`;
@@ -9,6 +9,8 @@ const VenuesUrl = `${API_URL}/venues`;
 const VenueForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const debounceTimerRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -20,6 +22,9 @@ const VenueForm = () => {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -33,6 +38,114 @@ const VenueForm = () => {
         .finally(() => setLoading(false));
     }
   }, [id]);
+
+  // Debounce для поиска адресов
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (!formData.address.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      searchAddress(formData.address);
+    }, 800);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [formData.address]);
+
+  // Поиск адресов через Yandex или Photon API
+  const searchAddress = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      let results = [];
+
+      // Пробуем Yandex если есть ключ
+      if (YANDEX_API_KEY) {
+        try {
+          const yandexResponse = await fetch(
+            `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json&lang=ru_RU&results=10`
+          );
+
+          if (yandexResponse.ok) {
+            const data = await yandexResponse.json();
+            const features = data.response.GeoObjectCollection.featureMember || [];
+
+            results = features.map((feature) => {
+              const geoObject = feature.GeoObject;
+              const point = geoObject.Point.pos.split(' ');
+              const lon = parseFloat(point[0]);
+              const lat = parseFloat(point[1]);
+
+              return {
+                lat,
+                lon,
+                display_name: geoObject.metaDataProperty.GeocoderMetaData.text,
+                source: 'yandex'
+              };
+            });
+          }
+        } catch (error) {
+          console.warn('Yandex API ошибка, переходим на Photon:', error);
+        }
+      }
+
+      // Если Yandex не сработал или ключа нет, используем Photon
+      if (results.length === 0) {
+        try {
+          const photonResponse = await fetch(
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lang=ru&limit=10`
+          );
+
+          if (photonResponse.ok) {
+            const data = await photonResponse.json();
+            results = (data.features || []).map((feature) => ({
+              lat: feature.geometry.coordinates[1],
+              lon: feature.geometry.coordinates[0],
+              display_name: feature.properties.name ||
+                `${feature.properties.street || ''} ${feature.properties.city || ''}`.trim(),
+              source: 'photon'
+            }));
+          }
+        } catch (error) {
+          console.error('Photon API ошибка:', error);
+        }
+      }
+
+      setSearchResults(results);
+      setShowSearchResults(results.length > 0);
+    } catch (error) {
+      console.error('Ошибка поиска адреса:', error);
+      setSearchResults([]);
+      setShowSearchResults(false);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectAddress = (result) => {
+    setFormData({
+      ...formData,
+      address: result.display_name,
+      latitude: result.lat,
+      longitude: result.lon
+    });
+    setShowSearchResults(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,7 +164,7 @@ const VenueForm = () => {
       return;
     }
     if (!formData.latitude || !formData.longitude) {
-      setError('Координаты (широта и долгота) обязательны для отображения карты');
+      setError('Координаты не установлены. Выберите адрес из поиска.');
       return;
     }
     
@@ -77,67 +190,145 @@ const VenueForm = () => {
   if (loading) return <div style={{ padding: '20px' }}>Загрузка...</div>;
 
   return (
-    <div style={{ maxWidth: '500px', padding: '20px' }}>
+    <div style={{ maxWidth: '600px', padding: '20px' }}>
       <h2>{id ? "Редактирование площадки" : "Новая площадка"}</h2>
       {error && <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffebee', borderRadius: '5px', marginBottom: '10px' }}>{error}</div>}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div>
-          <label>Название площадки</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Название площадки</label>
           <input 
-            placeholder="Название площадки" 
+            placeholder="Введите название площадки" 
             value={formData.name} 
             onChange={e => setFormData({...formData, name: e.target.value})} 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '5px' }}
             required
           />
         </div>
 
-        {/* Карта для выбора локации */}
+        {/* Поиск адреса */}
+        <div style={{ position: 'relative' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Адрес площадки</label>
+          <input 
+            type="text"
+            placeholder="Введите адрес для поиска..."
+            value={formData.address} 
+            onChange={e => setFormData({...formData, address: e.target.value})}
+            style={{ width: '100%', padding: '10px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '5px' }}
+            onFocus={() => formData.address && setShowSearchResults(true)}
+            required
+          />
+
+          {/* Результаты поиска */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                borderTop: 'none',
+                borderRadius: '0 0 5px 5px',
+                maxHeight: '250px',
+                overflowY: 'auto',
+                zIndex: 1000,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              {searchResults.map((result, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSelectAddress(result)}
+                  style={{
+                    padding: '12px',
+                    borderBottom: index < searchResults.length - 1 ? '1px solid #eee' : 'none',
+                    cursor: 'pointer',
+                    backgroundColor: '#fafafa',
+                    transition: 'backgroundColor 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = '#f0f0f0')}
+                  onMouseLeave={(e) => (e.target.style.backgroundColor = '#fafafa')}
+                >
+                  <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                    {result.display_name.split(',')[0]}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#999', marginTop: '3px' }}>
+                    {result.display_name.substring(result.display_name.indexOf(',') + 1)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showSearchResults && searchResults.length === 0 && !isSearching && formData.address.trim() && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                borderTop: 'none',
+                borderRadius: '0 0 5px 5px',
+                padding: '12px',
+                fontSize: '13px',
+                color: '#999',
+                zIndex: 1000,
+              }}
+            >
+              Адреса не найдены
+            </div>
+          )}
+
+          {isSearching && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                borderTop: 'none',
+                borderRadius: '0 0 5px 5px',
+                padding: '12px',
+                fontSize: '13px',
+                color: '#999',
+                zIndex: 1000,
+              }}
+            >
+              Поиск...
+            </div>
+          )}
+        </div>
+
+        {/* Карта для предпросмотра */}
         <VenueMapPicker 
           latitude={formData.latitude}
           longitude={formData.longitude}
           address={formData.address}
-          onLocationChange={(lat, lon, addr = null) => {
-            setFormData({
-              ...formData,
-              latitude: lat,
-              longitude: lon,
-              address: addr || formData.address
-            });
-          }}
         />
 
-        {/* Поле редактирования адреса */}
         <div>
-          <label>Адрес</label>
-          <input 
-            type="text"
-            placeholder="Введите адрес площадки"
-            value={formData.address} 
-            onChange={e => setFormData({...formData, address: e.target.value})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            required
-          />
-        </div>
-
-        <div>
-          <label>Вместимость (человек)</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Вместимость (человек)</label>
           <input 
             type="number" 
             min="1"
             value={formData.capacity} 
             onChange={e => setFormData({...formData, capacity: e.target.value})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '5px' }}
             required
           />
         </div>
 
         <div>
-          <label>Тип помещения</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Тип помещения</label>
           <select 
             value={formData.type} 
             onChange={e => setFormData({...formData, type: e.target.value})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '5px' }}
           >
             <option value="indoor">Закрытое помещение</option>
             <option value="outdoor">Открытая площадка</option>
@@ -145,7 +336,7 @@ const VenueForm = () => {
         </div>
 
         <div style={{ 
-          padding: '10px', 
+          padding: '12px', 
           backgroundColor: '#f5f5f5', 
           borderRadius: '5px',
           display: 'flex',
@@ -164,12 +355,14 @@ const VenueForm = () => {
         <button 
           type="submit" 
           style={{ 
-            padding: '10px', 
+            padding: '12px', 
             background: '#4CAF50', 
             color: 'white', 
             border: 'none', 
             borderRadius: '5px', 
-            cursor: 'pointer' 
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '16px'
           }}
         >
           {id ? "Сохранить изменения" : "Создать площадку"}
