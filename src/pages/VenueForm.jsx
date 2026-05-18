@@ -64,12 +64,13 @@ const VenueForm = () => {
 
   // Поиск адресов через Yandex или Photon API
   const searchAddress = async (query) => {
-    if (!query.trim()) {
+    const raw = (query || '').trim().replace(/[;,]+$/g, '').trim();
+    if (!raw) {
       setSearchResults([]);
       setShowSearchResults(false);
       return;
     }
-    console.debug('searchAddress start', { query });
+    console.debug('searchAddress start', { query: raw });
     setIsSearching(true);
     try {
       let results = [];
@@ -78,7 +79,7 @@ const VenueForm = () => {
       if (YANDEX_API_KEY) {
         try {
           const yandexResponse = await fetch(
-            `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(query)}&format=json&lang=ru_RU&results=10`
+            `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${encodeURIComponent(raw)}&format=json&lang=ru_RU&results=10`
           );
           if (yandexResponse.ok) {
             const data = await yandexResponse.json();
@@ -102,7 +103,8 @@ const VenueForm = () => {
               };
             });
           } else {
-            console.warn('Yandex geocode returned not ok', yandexResponse.status);
+            const body = await yandexResponse.text().catch(() => '<<no body>>');
+            console.warn('Yandex geocode returned not ok', yandexResponse.status, body);
           }
         } catch (error) {
           console.warn('Yandex API ошибка, переходим на Photon:', error);
@@ -113,7 +115,7 @@ const VenueForm = () => {
       if (results.length === 0) {
         try {
           const photonResponse = await fetch(
-            `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lang=ru&limit=10`
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(raw)}&lang=ru&limit=10`
           );
 
           if (photonResponse.ok) {
@@ -144,16 +146,42 @@ const VenueForm = () => {
               };
             });
           } else {
-            console.warn('Photon geocode returned not ok', photonResponse.status);
+            const body = await photonResponse.text().catch(() => '<<no body>>');
+            console.warn('Photon geocode returned not ok', photonResponse.status, body);
           }
         } catch (error) {
           console.error('Photon API ошибка:', error);
         }
       }
 
+      // Если всё ещё нет результатов, используем Nominatim (OpenStreetMap) как запасной провайдер
+      if (results.length === 0) {
+        try {
+          const nominatimResponse = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(raw)}&addressdetails=1&limit=10`
+          );
+
+          if (nominatimResponse.ok) {
+            const data = await nominatimResponse.json();
+            console.debug('nominatim results count', data.length);
+            results = data.map((item) => ({
+              lat: parseFloat(item.lat) || 0,
+              lon: parseFloat(item.lon) || 0,
+              display_name: item.display_name || '',
+              source: 'nominatim'
+            }));
+          } else {
+            const body = await nominatimResponse.text().catch(() => '<<no body>>');
+            console.warn('Nominatim returned not ok', nominatimResponse.status, body);
+          }
+        } catch (err) {
+          console.error('Nominatim error:', err);
+        }
+      }
+
       setSearchResults(results);
       setShowSearchResults(results.length > 0);
-      console.debug('searchAddress finished', { query, resultsCount: results.length });
+      console.debug('searchAddress finished', { query: raw, resultsCount: results.length });
     } catch (error) {
       console.error('Ошибка поиска адреса:', error);
       setSearchResults([]);
