@@ -21,14 +21,26 @@ const EventForm = () => {
     status: 'planned',
     type: 'internal',
     guardId: '',
-    venueId: ''
+    venueId: '',
+    ticketsSold: 0.5,
+    isIncident: false
   });
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (id) {
       axios.get(`${EventURL}/${id}`)
-        .then(res => setFormData(res.data))
+        .then(res => {
+          const data = res.data;
+          // Убедиться, что есть необходимые поля
+          if (!data.ticketsSold) {
+            data.ticketsSold = 0.5;
+          }
+          if (data.isIncident === undefined) {
+            data.isIncident = false;
+          }
+          setFormData(data);
+        })
         .catch(err => console.error(err));
     }
   }, [id]);
@@ -66,8 +78,14 @@ const EventForm = () => {
     
     setError(null);
 
+    const dataToSubmit = {
+      ...formData,
+      ticketsSold: formData.ticketsSold || 0.5,
+      isIncident: formData.isIncident || false
+    };
+
     if (id) {
-      axios.put(`${EventURL}/${id}`, formData)
+      axios.put(`${EventURL}/${id}`, dataToSubmit)
         .then(() => {
           alert("Данные обновлены!");
           navigate('/');
@@ -75,12 +93,11 @@ const EventForm = () => {
         .catch(err => setError(`Ошибка обновления: ${err.message}`));
     } else {
       // При создании добавляем случайный коэффициент посещаемости
-      const dataToSubmit = {
-        ...formData,
-        ticketsSold: Math.random() * 0.6 + 0.4, // От 0.4 до 1.0
-        isIncident: false
+      const newEventData = {
+        ...dataToSubmit,
+        ticketsSold: Math.random() * 0.6 + 0.4 // От 0.4 до 1.0
       };
-      axios.post(EventURL, dataToSubmit)
+      axios.post(EventURL, newEventData)
         .then(() => {
           alert("Мероприятие создано!");
           navigate('/');

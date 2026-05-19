@@ -74,7 +74,8 @@ const EventDetail = () => {
   const calculateRevenue = () => {
     if (!venue || !event) return 0;
     const ticketPrice = getTicketPrice();
-    const visitors = Math.round(venue.capacity * event.ticketsSold);
+    const ticketsSold = event.ticketsSold || 0.5; // Значение по умолчанию если отсутствует
+    const visitors = Math.round(venue.capacity * ticketsSold);
     return ticketPrice * visitors;
   };
 
@@ -165,7 +166,7 @@ const EventDetail = () => {
 
           <p><strong>Цена билета:</strong> {getTicketPrice().toLocaleString('ru-RU')} ₽</p>
 
-          <p><strong>Ожидаемая посещаемость:</strong> {Math.round(venue?.capacity * event.ticketsSold)} из {venue?.capacity} человек ({Math.round(event.ticketsSold * 100)}%)</p>
+          <p><strong>Ожидаемая посещаемость:</strong> {Math.round(venue?.capacity * (event.ticketsSold || 0.5))} из {venue?.capacity} человек ({Math.round((event.ticketsSold || 0.5) * 100)}%)</p>
 
           <p style={{ 
             backgroundColor: '#fff9c4',
