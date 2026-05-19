@@ -21,7 +21,8 @@ const EventForm = () => {
     status: 'planned',
     type: 'internal',
     guardId: '',
-    venueId: ''
+    venueId: '',
+    ticketPrice: 0
   });
   const [error, setError] = useState(null);
 
@@ -57,6 +58,10 @@ const EventForm = () => {
     }
     if (Number(formData.guardsCount) <= 0) {
       setError('Количество охраны должно быть больше 0');
+      return;
+    }
+    if (Number(formData.ticketPrice) <= 0) {
+      setError('Цена билета должна быть больше 0');
       return;
     }
     if (!formData.venueId) {
@@ -168,6 +173,17 @@ const EventForm = () => {
             min="1"
             value={formData.guardsCount} 
             onChange={e => setFormData({...formData, guardsCount: e.target.value})}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div>
+          <label>Цена билета (руб.)</label>
+          <input 
+            type="number" 
+            min="1"
+            value={formData.ticketPrice} 
+            onChange={e => setFormData({...formData, ticketPrice: e.target.value})}
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
           />
         </div>

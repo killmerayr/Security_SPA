@@ -62,15 +62,50 @@ const EventDetail = () => {
     }
   };
 
+  const handleIncident = () => {
+    axios.patch(`${EventURL}/${id}`, { isIncident: true })
+      .then(res => {
+        setEvent(res.data);
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleResolveIncident = () => {
+    axios.patch(`${EventURL}/${id}`, { isIncident: false })
+      .then(res => {
+        setEvent(res.data);
+      })
+      .catch(err => console.error(err));
+  };
+
   return (
     <div style={{ maxWidth: '600px', padding: '20px' }}>
       <div style={{ 
         padding: '20px', 
-        border: `3px solid ${getRiskColor(event.riskLevel)}`, 
+        border: `3px solid ${event.isIncident ? '#d32f2f' : getRiskColor(event.riskLevel)}`, 
         borderRadius: '10px',
-        backgroundColor: '#f9f9f9'
+        backgroundColor: event.isIncident ? '#ffebee' : '#f9f9f9'
       }}>
-        <h1 style={{ margin: '0 0 15px 0' }}>{event.title}</h1>
+        <h1 style={{ margin: '0 0 15px 0', color: event.isIncident ? '#d32f2f' : 'inherit' }}>
+          {event.isIncident ? '❌ ' : ''}{event.title}
+        </h1>
+
+        {event.isIncident && (
+          <div style={{
+            backgroundColor: '#ffcdd2',
+            padding: '15px',
+            borderRadius: '8px',
+            marginBottom: '15px',
+            border: '2px solid #d32f2f'
+          }}>
+            <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#d32f2f' }}>
+              ⚠️ МЕРОПРИЯТИЕ СОРВАНО
+            </p>
+            <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+              Цена ущерба (сборы): {(Number(event.guardsCount) * Number(event.ticketPrice))?.toLocaleString('ru-RU')} ₽
+            </p>
+          </div>
+        )}
         
         <div style={{ 
           backgroundColor: 'white',
@@ -112,6 +147,17 @@ const EventDetail = () => {
 
           <p><strong>Требуемая охрана:</strong> {event.guardsCount} человек</p>
 
+          <p><strong>Цена билета:</strong> {event.ticketPrice?.toLocaleString('ru-RU')} ₽</p>
+
+          <p style={{ 
+            backgroundColor: '#fff9c4',
+            padding: '10px',
+            borderRadius: '5px',
+            fontWeight: 'bold'
+          }}>
+            <strong>Общая сумма сборов:</strong> {(Number(event.guardsCount) * Number(event.ticketPrice))?.toLocaleString('ru-RU')} ₽
+          </p>
+
           <p><strong>Статус готовности:</strong> {getStatusLabel(event.status)}</p>
 
           {guard && (
@@ -146,16 +192,58 @@ const EventDetail = () => {
           }}>
             Вернуться к списку
           </Link>
-          <Link to={`/edit/${id}`} style={{ 
-            padding: '10px 20px',
-            backgroundColor: '#FF9800',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '5px'
-          }}>
-            Редактировать
-          </Link>
+          {!event.isIncident && (
+            <Link to={`/edit/${id}`} style={{ 
+              padding: '10px 20px',
+              backgroundColor: '#FF9800',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '5px'
+            }}>
+              Редактировать
+            </Link>
+          )}
         </div>
+
+        {!event.isIncident && (
+          <button 
+            onClick={handleIncident}
+            style={{
+              width: '100%',
+              marginTop: '10px',
+              padding: '12px',
+              backgroundColor: '#d32f2f',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '16px'
+            }}
+          >
+            🚨 Демо инцидент
+          </button>
+        )}
+
+        {event.isIncident && (
+          <button 
+            onClick={handleResolveIncident}
+            style={{
+              width: '100%',
+              marginTop: '10px',
+              padding: '12px',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '16px'
+            }}
+          >
+            ✅ Исправлено
+          </button>
+        )}
       </div>
     </div>
   );

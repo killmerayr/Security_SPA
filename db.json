@@ -9,7 +9,9 @@
       "status": "planned",
       "guardId": "g1",
       "venueId": "v2",
-      "date": "2024-04-15"
+      "date": "2024-04-15",
+      "ticketPrice": 5000,
+      "isIncident": false
     },
     {
       "id": "2",
@@ -20,7 +22,9 @@
       "status": "active",
       "guardId": "g2",
       "venueId": "v2",
-      "date": "2024-05-01"
+      "date": "2024-05-01",
+      "ticketPrice": 2500,
+      "isIncident": false
     },
     {
       "id": "3",
@@ -31,7 +35,9 @@
       "status": "planned",
       "guardId": "g1",
       "venueId": "v1",
-      "date": "2024-06-10"
+      "date": "2024-06-10",
+      "ticketPrice": 10000,
+      "isIncident": false
     },
     {
       "id": "b730",
@@ -42,7 +48,9 @@
       "status": "planned",
       "type": "internal",
       "guardId": "",
-      "venueId": "v1"
+      "venueId": "v1",
+      "ticketPrice": 3500,
+      "isIncident": false
     }
   ],
   "guards": [
