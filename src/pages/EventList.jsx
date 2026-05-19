@@ -5,25 +5,33 @@ import { API_URL } from '../config/api';
 
 const EventURL = `${API_URL}/events`;
 const VenuesUrl = `${API_URL}/venues`;
+const GuardsUrl = `${API_URL}/guards`;
 
 const EventList = () => {
   const [events, setEvents] = useState([]);
   const [venues, setVenues] = useState({});
+  const [guards, setGuards] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     Promise.all([
       axios.get(EventURL),
-      axios.get(VenuesUrl)
+      axios.get(VenuesUrl),
+      axios.get(GuardsUrl)
     ])
-    .then(([eventsRes, venuesRes]) => {
+    .then(([eventsRes, venuesRes, guardsRes]) => {
       setEvents(eventsRes.data);
       const venuesMap = {};
       venuesRes.data.forEach(v => {
         venuesMap[v.id] = v;
       });
       setVenues(venuesMap);
+      const guardsMap = {};
+      guardsRes.data.forEach(g => {
+        guardsMap[g.id] = g;
+      });
+      setGuards(guardsMap);
     })
     .catch(err => {
       console.error(err);
@@ -85,6 +93,20 @@ const EventList = () => {
                   'Низкий'
                 }</p>
                 <p><strong>Охрана:</strong> {e.guardsCount} человек</p>
+                
+                {e.isArmed && (
+                  <p style={{ 
+                    backgroundColor: '#fff3cd', 
+                    padding: '8px', 
+                    borderRadius: '4px',
+                    marginBottom: '10px',
+                    color: '#856404',
+                    fontWeight: 'bold'
+                  }}>
+                    🔫 Табельное оружие | Ответственный: {guards[e.guardId]?.fullName || 'Не назначен'}
+                  </p>
+                )}
+                
                 <p><strong>Статус:</strong> {
                   e.status === 'active' ? 'Активное' :
                   e.status === 'planned' ? 'Планируется' :

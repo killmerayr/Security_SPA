@@ -79,6 +79,19 @@ const EventDetail = () => {
     return ticketPrice * visitors;
   };
 
+  const getWeaponValidityStatus = () => {
+    if (!event.weaponIssueDate) return null;
+    const issueDate = new Date(event.weaponIssueDate);
+    const expiryDate = new Date(issueDate);
+    expiryDate.setDate(expiryDate.getDate() + 1);
+    const now = new Date();
+    
+    if (now > expiryDate) {
+      return { status: 'expired', label: 'Истек срок действия' };
+    }
+    return { status: 'valid', label: 'Действительно' };
+  };
+
   const handleIncident = () => {
     axios.patch(`${EventURL}/${id}`, { isIncident: true })
       .then(res => {
@@ -192,6 +205,42 @@ const EventDetail = () => {
                 Должность: {guard.rank}<br/>
                 Опыт: {guard.experience} лет<br/>
                 Телефон: {guard.phone}
+              </p>
+            </div>
+          )}
+
+          {event.isArmed && (
+            <div style={{
+              backgroundColor: '#ffe0b2',
+              padding: '10px',
+              borderRadius: '5px',
+              marginTop: '10px',
+              border: '2px solid #ff6f00'
+            }}>
+              <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#e65100' }}>
+                🔫 Охранники оснащены табельным оружием
+              </p>
+              <p style={{ marginLeft: '20px', margin: '5px 0' }}>
+                <strong>Ответственный за выдачу:</strong> {guard?.fullName || 'Не назначен'}
+              </p>
+              <p style={{ marginLeft: '20px', margin: '5px 0' }}>
+                <strong>Пункт выдачи:</strong> {event.weaponIssueAddress}
+              </p>
+              <p style={{ marginLeft: '20px', margin: '5px 0' }}>
+                <strong>Дата выдачи:</strong> {event.weaponIssueDate}
+              </p>
+              <p style={{ marginLeft: '20px', margin: '5px 0' }}>
+                <strong>Срок действия:</strong> {getWeaponValidityStatus()?.label}
+                <span style={{ 
+                  marginLeft: '10px',
+                  padding: '2px 8px',
+                  backgroundColor: getWeaponValidityStatus()?.status === 'expired' ? '#d32f2f' : '#4CAF50',
+                  color: 'white',
+                  borderRadius: '3px',
+                  fontSize: '12px'
+                }}>
+                  {getWeaponValidityStatus()?.status === 'expired' ? '❌' : '✓'}
+                </span>
               </p>
             </div>
           )}

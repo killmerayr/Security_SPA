@@ -23,7 +23,10 @@ const EventForm = () => {
     guardId: '',
     venueId: '',
     ticketsSold: 0.5,
-    isIncident: false
+    isIncident: false,
+    isArmed: false,
+    weaponIssueAddress: '',
+    weaponIssueDate: ''
   });
   const [error, setError] = useState(null);
 
@@ -38,6 +41,15 @@ const EventForm = () => {
           }
           if (data.isIncident === undefined) {
             data.isIncident = false;
+          }
+          if (data.isArmed === undefined) {
+            data.isArmed = false;
+          }
+          if (!data.weaponIssueAddress) {
+            data.weaponIssueAddress = '';
+          }
+          if (!data.weaponIssueDate) {
+            data.weaponIssueDate = '';
           }
           setFormData(data);
         })
@@ -81,7 +93,10 @@ const EventForm = () => {
     const dataToSubmit = {
       ...formData,
       ticketsSold: formData.ticketsSold || 0.5,
-      isIncident: formData.isIncident || false
+      isIncident: formData.isIncident || false,
+      isArmed: formData.riskLevel === 'high' ? formData.isArmed : false,
+      weaponIssueAddress: formData.riskLevel === 'high' && formData.isArmed ? formData.weaponIssueAddress : '',
+      weaponIssueDate: formData.riskLevel === 'high' && formData.isArmed ? formData.weaponIssueDate : ''
     };
 
     if (id) {
@@ -163,6 +178,49 @@ const EventForm = () => {
             {formData.riskLevel === 'high' && ' 6500 ₽'}
           </div>
         </div>
+
+        {formData.riskLevel === 'high' && (
+          <>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input 
+                  type="checkbox"
+                  checked={formData.isArmed}
+                  onChange={e => setFormData({...formData, isArmed: e.target.checked})}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span>🔫 Охранники оснащены табельным оружием</span>
+              </label>
+            </div>
+
+            {formData.isArmed && (
+              <>
+                <div>
+                  <label>Адрес пункта выдачи оружия</label>
+                  <input 
+                    placeholder="Адрес пункта выдачи"
+                    value={formData.weaponIssueAddress}
+                    onChange={e => setFormData({...formData, weaponIssueAddress: e.target.value})}
+                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label>Дата выдачи оружия</label>
+                  <input 
+                    type="date"
+                    value={formData.weaponIssueDate}
+                    onChange={e => setFormData({...formData, weaponIssueDate: e.target.value})}
+                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ padding: '8px', backgroundColor: '#fff3cd', borderRadius: '4px', marginTop: '8px', color: '#856404', fontSize: '12px' }}>
+                    ⏰ Срок действия: не более 24 часов с момента выдачи
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
 
         <div>
           <label>Тип мероприятия</label>

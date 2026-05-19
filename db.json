@@ -11,7 +11,10 @@
       "venueId": "v2",
       "date": "2024-04-15",
       "ticketsSold": 0.8,
-      "isIncident": false
+      "isIncident": false,
+      "isArmed": true,
+      "weaponIssueAddress": "Казармы СОБ, ул. Красная, 45",
+      "weaponIssueDate": "2024-04-15"
     },
     {
       "id": "2",
@@ -24,7 +27,8 @@
       "venueId": "v2",
       "date": "2024-05-01",
       "ticketsSold": 0.95,
-      "isIncident": false
+      "isIncident": false,
+      "isArmed": false
     },
     {
       "id": "3",
@@ -37,7 +41,10 @@
       "venueId": "v1",
       "date": "2024-06-10",
       "ticketsSold": 0.85,
-      "isIncident": false
+      "isIncident": false,
+      "isArmed": true,
+      "weaponIssueAddress": "Полицейский участок, пр. Лен. Комсомола, 15",
+      "weaponIssueDate": "2024-06-10"
     },
     {
       "id": "b730",
@@ -50,7 +57,8 @@
       "guardId": "",
       "venueId": "v1",
       "ticketsSold": 0.4,
-      "isIncident": false
+      "isIncident": false,
+      "isArmed": false
     }
   ],
   "guards": [
