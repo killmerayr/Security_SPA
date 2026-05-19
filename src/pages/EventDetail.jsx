@@ -62,6 +62,22 @@ const EventDetail = () => {
     }
   };
 
+  const getTicketPrice = () => {
+    switch(event.riskLevel) {
+      case 'high': return 6500;
+      case 'medium': return 3500;
+      case 'low': return 1500;
+      default: return 3000;
+    }
+  };
+
+  const calculateRevenue = () => {
+    if (!venue || !event) return 0;
+    const ticketPrice = getTicketPrice();
+    const visitors = Math.round(venue.capacity * event.ticketsSold);
+    return ticketPrice * visitors;
+  };
+
   const handleIncident = () => {
     axios.patch(`${EventURL}/${id}`, { isIncident: true })
       .then(res => {
@@ -102,7 +118,7 @@ const EventDetail = () => {
               ⚠️ МЕРОПРИЯТИЕ СОРВАНО
             </p>
             <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
-              Цена ущерба (сборы): {(Number(event.guardsCount) * Number(event.ticketPrice))?.toLocaleString('ru-RU')} ₽
+              Цена ущерба (сборы): {calculateRevenue().toLocaleString('ru-RU')} ₽
             </p>
           </div>
         )}
@@ -147,7 +163,9 @@ const EventDetail = () => {
 
           <p><strong>Требуемая охрана:</strong> {event.guardsCount} человек</p>
 
-          <p><strong>Цена билета:</strong> {event.ticketPrice?.toLocaleString('ru-RU')} ₽</p>
+          <p><strong>Цена билета:</strong> {getTicketPrice().toLocaleString('ru-RU')} ₽</p>
+
+          <p><strong>Ожидаемая посещаемость:</strong> {Math.round(venue?.capacity * event.ticketsSold)} из {venue?.capacity} человек ({Math.round(event.ticketsSold * 100)}%)</p>
 
           <p style={{ 
             backgroundColor: '#fff9c4',
@@ -155,7 +173,7 @@ const EventDetail = () => {
             borderRadius: '5px',
             fontWeight: 'bold'
           }}>
-            <strong>Общая сумма сборов:</strong> {(Number(event.guardsCount) * Number(event.ticketPrice))?.toLocaleString('ru-RU')} ₽
+            <strong>Общая сумма сборов:</strong> {calculateRevenue().toLocaleString('ru-RU')} ₽
           </p>
 
           <p><strong>Статус готовности:</strong> {getStatusLabel(event.status)}</p>

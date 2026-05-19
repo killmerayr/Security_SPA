@@ -21,8 +21,7 @@ const EventForm = () => {
     status: 'planned',
     type: 'internal',
     guardId: '',
-    venueId: '',
-    ticketPrice: 0
+    venueId: ''
   });
   const [error, setError] = useState(null);
 
@@ -60,10 +59,6 @@ const EventForm = () => {
       setError('Количество охраны должно быть больше 0');
       return;
     }
-    if (Number(formData.ticketPrice) <= 0) {
-      setError('Цена билета должна быть больше 0');
-      return;
-    }
     if (!formData.venueId) {
       setError('Выберите площадку');
       return;
@@ -79,7 +74,13 @@ const EventForm = () => {
         })
         .catch(err => setError(`Ошибка обновления: ${err.message}`));
     } else {
-      axios.post(EventURL, formData)
+      // При создании добавляем случайный коэффициент посещаемости
+      const dataToSubmit = {
+        ...formData,
+        ticketsSold: Math.random() * 0.6 + 0.4, // От 0.4 до 1.0
+        isIncident: false
+      };
+      axios.post(EventURL, dataToSubmit)
         .then(() => {
           alert("Мероприятие создано!");
           navigate('/');
@@ -138,6 +139,12 @@ const EventForm = () => {
             <option value="medium">Средний</option>
             <option value="high">Высокий</option>
           </select>
+          <div style={{ padding: '8px', backgroundColor: '#e8f5e9', borderRadius: '4px', marginTop: '8px', color: '#2e7d32', fontSize: '14px' }}>
+            💡 Цена билета: 
+            {formData.riskLevel === 'low' && ' 1500 ₽'}
+            {formData.riskLevel === 'medium' && ' 3500 ₽'}
+            {formData.riskLevel === 'high' && ' 6500 ₽'}
+          </div>
         </div>
 
         <div>
@@ -173,17 +180,6 @@ const EventForm = () => {
             min="1"
             value={formData.guardsCount} 
             onChange={e => setFormData({...formData, guardsCount: e.target.value})}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
-
-        <div>
-          <label>Цена билета (руб.)</label>
-          <input 
-            type="number" 
-            min="1"
-            value={formData.ticketPrice} 
-            onChange={e => setFormData({...formData, ticketPrice: e.target.value})}
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
           />
         </div>

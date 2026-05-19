@@ -10,7 +10,7 @@
       "guardId": "g1",
       "venueId": "v2",
       "date": "2024-04-15",
-      "ticketPrice": 5000,
+      "ticketsSold": 0.8,
       "isIncident": false
     },
     {
@@ -23,7 +23,7 @@
       "guardId": "g2",
       "venueId": "v2",
       "date": "2024-05-01",
-      "ticketPrice": 2500,
+      "ticketsSold": 0.95,
       "isIncident": false
     },
     {
@@ -36,7 +36,7 @@
       "guardId": "g1",
       "venueId": "v1",
       "date": "2024-06-10",
-      "ticketPrice": 10000,
+      "ticketsSold": 0.85,
       "isIncident": false
     },
     {
@@ -49,7 +49,7 @@
       "type": "internal",
       "guardId": "",
       "venueId": "v1",
-      "ticketPrice": 3500,
+      "ticketsSold": 0.4,
       "isIncident": false
     }
   ],
